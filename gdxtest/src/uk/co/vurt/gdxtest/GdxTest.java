@@ -85,7 +85,7 @@ public class GdxTest implements ApplicationListener {
 	
 		for(int row = 0; row < map.length; row++){
 			for(int col = map[0].length-1; col >= 0; col--){
-				Vector2 position = getScreenPositionForMapPosition(new MapPosition(row, col));
+				Vector2 position = getScreenPositionFromMapPosition(new MapPosition(row, col));
 				if(map[col][row] == 0){
 					batch.draw(blackTileImage, position.x, position.y);
 				} else {
@@ -104,12 +104,15 @@ public class GdxTest implements ApplicationListener {
 		}
 	}
 
- 	private Vector2 getScreenPositionForMapPosition(MapPosition mapPos){
+ 	private Vector2 getScreenPositionFromMapPosition(MapPosition mapPos){
  		int offsetX = Math.round((mapPos.getCol() + mapPos.getRow()) * TILE_WIDTH/2);
 		int offsetY = Math.round((mapPos.getRow() - mapPos.getCol()) * TILE_HEIGHT/2);
 		
 		return new Vector2(startX + offsetX, startY + offsetY);
  	}
+ 	
+ 	private final static int HALF_TILE_HEIGHT = TILE_HEIGHT / 2;
+ 	private final static int HALF_TILE_WIDTH = TILE_WIDTH / 2;
  	
  	//TODO: Finish the linear equation integration to make this more efficient
  	// and to fix the off-by-one issue with the column
@@ -117,8 +120,9 @@ public class GdxTest implements ApplicationListener {
  		float offsetY = screenY - startY;
  		float offsetX = screenX - startX;
  		
- 		int col = Math.round((((2 * offsetY)/TILE_HEIGHT) + ((2 * offsetX)/TILE_WIDTH))/2);
-		int row = Math.round(((2 * offsetX)/TILE_WIDTH) - col);
+ 		int col = Math.round((offsetY/HALF_TILE_HEIGHT + offsetX/HALF_TILE_WIDTH)/2);
+		int row = Math.round(offsetX/HALF_TILE_WIDTH - col);
+
 		col = col -1;
 		
 		return new MapPosition(row, col);
