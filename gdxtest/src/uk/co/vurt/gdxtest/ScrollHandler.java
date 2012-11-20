@@ -7,5 +7,5 @@ public interface ScrollHandler {
 	public void scrollLeft();
 	public void scrollRight();
 	public void dragReset();
-	public void scroll(int x, int y);
+	public void scroll(int xVector, int yVector);
 }

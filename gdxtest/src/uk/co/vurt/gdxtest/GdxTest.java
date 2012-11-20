@@ -113,7 +113,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 		}
 		//draw puck
 		Vector2  puckPosition = mapToScreen(puckCell);
-		batch.draw(puckImage, puckPosition.x, puckPosition.y, tileWidth, tileHeight);
+		batch.draw(puckImage, puckPosition.x, puckPosition.y, puckImage.getWidth(), puckImage.getHeight());
 		batch.end();
 		
 		
@@ -151,7 +151,9 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 	    //check the click isn't outside the map boundaries
   		if(mapPos.getRow() >= 0 && mapPos.getCol() >= 0 && 
   		   mapPos.getRow() < map.length && mapPos.getCol() < map[0].length){
-  			map[mapPos.getRow()][mapPos.getCol()] = map[mapPos.getRow()][mapPos.getCol()] == 0 ? 1 : 0;
+//  			map[mapPos.getRow()][mapPos.getCol()] = map[mapPos.getRow()][mapPos.getCol()] == 0 ? 1 : 0;
+  			puckCell.setRow(mapPos.getCol());
+  			puckCell.setCol(mapPos.getRow());
   			System.out.println("Clicked on map[" + mapPos.getRow() + "][" + mapPos.getCol() + "]");
   		}else {
   			System.out.println("Clicked outside of map");
@@ -203,15 +205,18 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 	}
 	
 	@Override
-	public void scroll(int x, int y){
+	public void scroll(int screenX, int screenY){
+//		scroll.x -= xVector;
+//		scroll.y += yVector;
+		
 		if(lastDragX != 0 && lastDragY != 0){
-			int xDiff = lastDragX - x;
-			int yDiff = lastDragY - y;
+			int xDiff = lastDragX - screenX;
+			int yDiff = lastDragY - screenY;
 			scroll.x -= xDiff;
 			scroll.y += yDiff;
 		}
-		lastDragX = x;
-		lastDragY = y;
+		lastDragX = screenX;
+		lastDragY = screenY;
 				
 	}
 

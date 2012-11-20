@@ -55,25 +55,41 @@ public class KeyAndMouseInputProcessor implements InputProcessor {
 
 	@Override
 	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		// TODO Auto-generated method stub
 		return false;
 	}
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
 		if(!dragging){
+			System.out.println("touchUp!");
 			touchHandler.touch(screenX, screenY);
 		} else {
+			System.out.println("end of drag");
+			lastX = null;
+			lastY = null;
 			scrollHandler.dragReset();
 		}
 		dragging = false;
 		return true;
 	}
 
+	private final static int DRAG_DIFFERENCE = 10;
+	private Integer lastX, lastY;
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		this.dragging = true;
-		scrollHandler.scroll(screenX, screenY);
+		if(lastX != null && lastY != null){
+			int xVector = lastX - screenX;
+			int yVector = lastY - screenY;
+			if(Math.abs(xVector) > DRAG_DIFFERENCE || 
+					Math.abs(yVector) > DRAG_DIFFERENCE){
+				this.dragging = true;
+				scrollHandler.scroll(screenX, screenY);
+			}
+		}else{
+			lastX = screenX;
+			lastY = screenY;
+		}
+		
 		return true;
 	}
 
