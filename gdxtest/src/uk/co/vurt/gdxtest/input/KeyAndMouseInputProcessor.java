@@ -11,6 +11,8 @@ public class KeyAndMouseInputProcessor implements InputProcessor {
 	private ScrollHandler scrollHandler;
 	private TouchHandler touchHandler;
 	
+	private boolean dragging = false;
+	
 	public KeyAndMouseInputProcessor(ScrollHandler scrollHandler, TouchHandler touchHandler){
 		this.scrollHandler = scrollHandler;
 		this.touchHandler = touchHandler;
@@ -59,12 +61,18 @@ public class KeyAndMouseInputProcessor implements InputProcessor {
 
 	@Override
 	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		touchHandler.touch(screenX, screenY);
+		if(!dragging){
+			touchHandler.touch(screenX, screenY);
+		} else {
+			scrollHandler.dragReset();
+		}
+		dragging = false;
 		return true;
 	}
 
 	@Override
 	public boolean touchDragged(int screenX, int screenY, int pointer) {
+		this.dragging = true;
 		scrollHandler.scroll(screenX, screenY);
 		return true;
 	}

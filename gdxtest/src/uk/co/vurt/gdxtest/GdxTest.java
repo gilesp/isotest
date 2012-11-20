@@ -22,6 +22,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 	
 	private Texture whiteTileImage;
 	private Texture blackTileImage;
+	private Texture puckImage;
 //	private Sound dropSound;
 	
 	private SpriteBatch batch;
@@ -41,6 +42,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 //	private int startX, startY;
 //	private float centreX, centreY;
 	private Vector3 touchPosition;
+	private MapPosition puckCell;
 	
 	private Vector2 scroll;
 	private float zoomLevel= 1.0f;
@@ -52,6 +54,11 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 	
 	@Override
 	public void create() {
+		whiteTileImage = new Texture(Gdx.files.internal("tile_white.png"));
+		blackTileImage = new Texture(Gdx.files.internal("tile_black.png"));
+		puckImage = new Texture(Gdx.files.internal("puck.png"));
+		puckCell = new MapPosition(0, 0);
+		
 		inputMultiplexer = new InputMultiplexer();
 		inputMultiplexer.addProcessor(new KeyAndMouseInputProcessor(this, this));
 		Gdx.input.setInputProcessor(inputMultiplexer);
@@ -61,8 +68,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 		tileWidth = TILE_WIDTH * zoomLevel;
 		tileHeight = TILE_HEIGHT * zoomLevel;
 		
-		whiteTileImage = new Texture(Gdx.files.internal("tile_white.png"));
-		blackTileImage = new Texture(Gdx.files.internal("tile_black.png"));
+		
 //		dropSound = Gdx.audio.newSound(Gdx.files.internal("waterdrop.wav"));
 		
 		camera = new OrthographicCamera();
@@ -90,19 +96,24 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
 
+		//draw map
+		Vector2 cellPosition;
 		for(int row = 0; row < map[0].length; row++){
 			for(int col = map.length-1; col >= 0; col--){
-				Vector2 position = mapToScreen(new MapPosition(row, col));
-				if(position.x > -tileWidth && position.x < SCREEN_WIDTH+tileWidth
-						&& position.y > -tileHeight && position.y < SCREEN_HEIGHT+tileHeight){
+				cellPosition = mapToScreen(new MapPosition(row, col));
+				if(cellPosition.x > -tileWidth && cellPosition.x < SCREEN_WIDTH+tileWidth
+						&& cellPosition.y > -tileHeight && cellPosition.y < SCREEN_HEIGHT+tileHeight){
 					if(map[col][row] == 0){
-						batch.draw(blackTileImage, position.x, position.y, tileWidth, tileHeight);
+						batch.draw(blackTileImage, cellPosition.x, cellPosition.y, tileWidth, tileHeight);
 					} else {
-						batch.draw(whiteTileImage, position.x, position.y, tileWidth, tileHeight);
+						batch.draw(whiteTileImage, cellPosition.x, cellPosition.y, tileWidth, tileHeight);
 					}
 				}
 			}
 		}
+		//draw puck
+		Vector2  puckPosition = mapToScreen(puckCell);
+		batch.draw(puckImage, puckPosition.x, puckPosition.y, tileWidth, tileHeight);
 		batch.end();
 		
 		
@@ -184,6 +195,12 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 	}
 	
 	private int lastDragX = 0, lastDragY = 0;
+	
+	@Override
+	public void dragReset(){
+		lastDragX = 0;
+		lastDragY = 0;
+	}
 	
 	@Override
 	public void scroll(int x, int y){
