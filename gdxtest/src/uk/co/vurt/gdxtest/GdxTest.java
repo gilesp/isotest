@@ -1,9 +1,11 @@
 package uk.co.vurt.gdxtest;
 
+import uk.co.vurt.gdxtest.input.KeyAndMouseInputProcessor;
+
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
-import com.badlogic.gdx.Input.Keys;
+import com.badlogic.gdx.InputMultiplexer;
 import com.badlogic.gdx.graphics.GL10;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -11,7 +13,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
-public class GdxTest implements ApplicationListener {
+public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler {
 	private final static int SCREEN_WIDTH = 800;
 	private final static int SCREEN_HEIGHT = 480;
 	private final static int TILE_WIDTH = 100;
@@ -45,17 +47,19 @@ public class GdxTest implements ApplicationListener {
 	private float tileWidth;
 	private float tileHeight;
 	
+	InputMultiplexer inputMultiplexer;
 	
 	
 	@Override
 	public void create() {
+		inputMultiplexer = new InputMultiplexer();
+		inputMultiplexer.addProcessor(new KeyAndMouseInputProcessor(this, this));
+		Gdx.input.setInputProcessor(inputMultiplexer);
+		
 		scroll = new Vector2(0, 0);
 		touchPosition = new Vector3();
 		tileWidth = TILE_WIDTH * zoomLevel;
 		tileHeight = TILE_HEIGHT * zoomLevel;
-		
-//		float w = Gdx.graphics.getWidth();
-//		float h = Gdx.graphics.getHeight();
 		
 		whiteTileImage = new Texture(Gdx.files.internal("tile_white.png"));
 		blackTileImage = new Texture(Gdx.files.internal("tile_black.png"));
@@ -66,18 +70,6 @@ public class GdxTest implements ApplicationListener {
 //		camera.setToOrtho(true, WINDOW_WIDTH, WINDOW_HEIGHT); //coordinate arranged from top left
 		
 		batch = new SpriteBatch();
-//		
-//		centreX = SCREEN_WIDTH/2;
-//		centreY = SCREEN_HEIGHT/2;
-//		
-//		System.out.println("map.length: " + map.length);
-//		System.out.println("map.length/2: " + (map.length/2f));
-//		
-//		startX = Math.round(centreX - ((map.length/2f)*(TILE_WIDTH)));
-//		startY = Math.round(centreY - (TILE_HEIGHT/2f));
-//		
-//		System.out.println("Centre: " + centreX + ", " + centreY);
-//		System.out.println("Start: " + startX + ", " + startY);
 	}
 
 	@Override
@@ -87,92 +79,40 @@ public class GdxTest implements ApplicationListener {
 		batch.dispose();
 	}
 
-	private MapPosition topLeft,topRight, bottomLeft, bottomRight;
-	private int minRow, minCol, maxRow, maxCol; 
-	
- 	@Override
+	@Override
 	public void render() {
 		//clear the screen
 		Gdx.gl.glClearColor(1, 1, 1, 1);
 		Gdx.gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
-
-		
-		topLeft = screenToMap(0, 0);
-		topRight = screenToMap(SCREEN_WIDTH, 0);
-		bottomLeft = screenToMap(0, SCREEN_HEIGHT);
-		bottomRight = screenToMap(SCREEN_WIDTH, SCREEN_HEIGHT);
-		
-		System.out.println("topLeft: " + topLeft);
-		System.out.println("topRight: " + topRight);
-		System.out.println("bottomLeft: " + bottomLeft);
-		System.out.println("bottomRight: " + bottomRight);
-		
-		minRow = bottomLeft.row;
-		minCol = topLeft.col;
-		maxRow = topRight.row;
-		maxCol = bottomRight.col;
-		
-		minRow = minRow < 0 ? 0 : minRow;
-		minCol = minCol < 0 ? 0 : minCol;
-
-		maxRow = maxRow > map[0].length ? map[0].length-1 : maxRow;
-		maxCol = maxCol > map.length ? map.length-1 : maxCol;
-		
-		System.out.println("row: " + minRow + "->" + maxRow);
-		System.out.println("col: " + minCol + "->" + maxCol);
 		
 		//draw everything on the screen
 		camera.update();
 		batch.setProjectionMatrix(camera.combined);
 		batch.begin();
-		for(int row = minRow; row < maxRow; row++){
-			for(int col = maxCol; col >= minCol; col--){
-//			for(int col = startCol; col < colCount; col++){
+
+		for(int row = 0; row < map[0].length; row++){
+			for(int col = map.length-1; col >= 0; col--){
 				Vector2 position = mapToScreen(new MapPosition(row, col));
-				if(map[row][col] == 0){
-					batch.draw(blackTileImage, position.x, position.y, tileWidth, tileHeight);
-				} else {
-					batch.draw(whiteTileImage, position.x, position.y, tileWidth, tileHeight);
+				if(position.x > -tileWidth && position.x < SCREEN_WIDTH+tileWidth
+						&& position.y > -tileHeight && position.y < SCREEN_HEIGHT+tileHeight){
+					if(map[col][row] == 0){
+						batch.draw(blackTileImage, position.x, position.y, tileWidth, tileHeight);
+					} else {
+						batch.draw(whiteTileImage, position.x, position.y, tileWidth, tileHeight);
+					}
 				}
 			}
 		}
-//		for(int row = 0; row < map.length; row++){
-//			for(int col = map[0].length-1; col >= 0; col--){
-//				Vector2 position = mapToScreen(new MapPosition(row, col));
-//				if(map[col][row] == 0){
-//					batch.draw(blackTileImage, position.x, position.y, tileWidth, tileHeight);
-//				} else {
-//					batch.draw(whiteTileImage, position.x, position.y, tileWidth, tileHeight);
-//				}
-//			}
-//		}
 		batch.end();
 		
-		//handle touch input
-		if(Gdx.input.justTouched()){
-			handleTouch(Gdx.input);
-		}
-		if(Gdx.input.isKeyPressed(Keys.LEFT)) {
-			scroll.x -= 200 * Gdx.graphics.getDeltaTime();
-		}
-		if(Gdx.input.isKeyPressed(Keys.RIGHT)) {
-			scroll.x += 200 * Gdx.graphics.getDeltaTime();
-		}
-		if(Gdx.input.isKeyPressed(Keys.UP)) {
-			scroll.y += 200 * Gdx.graphics.getDeltaTime();
-		}
-		if(Gdx.input.isKeyPressed(Keys.DOWN)) {
-			scroll.y -= 200 * Gdx.graphics.getDeltaTime();
-		}
+		
+
 
 	}
 
  	private Vector2 mapToScreen(MapPosition mapPos){
- 		int offsetX = Math.round(((mapPos.getCol() + mapPos.getRow()) * tileWidth/2) + scroll.x) ;
-		int offsetY = Math.round(((mapPos.getRow() - mapPos.getCol()) * tileHeight/2) + scroll.y);
-		
-//		return new Vector2(startX + offsetX, startY + offsetY);
-		return new Vector2(offsetX, offsetY);
+ 		return new Vector2(Math.round(((mapPos.getCol() + mapPos.getRow()) * tileWidth/2) + scroll.x),
+ 				Math.round(((mapPos.getRow() - mapPos.getCol()) * tileHeight/2) + scroll.y));
  	}
  	
  	//TODO: Finish the linear equation integration to make this more efficient
@@ -189,9 +129,9 @@ public class GdxTest implements ApplicationListener {
 		return new MapPosition(row, col);
  	}
  	
-	private void handleTouch(Input input){
-		System.out.println("Raw pos: " + Gdx.input.getX() + "," + Gdx.input.getY());
-		touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+	private void handleTouch(int screenX, int screenY){
+		System.out.println("Raw pos: " + screenX + "," + screenY);
+		touchPosition.set(screenX, screenY, 0);
 		camera.unproject(touchPosition);
 		System.out.println("Unprojected: " + touchPosition.x + "," + touchPosition.y);
 
@@ -217,5 +157,49 @@ public class GdxTest implements ApplicationListener {
 
 	@Override
 	public void resume() {
+	}
+
+	@Override
+	public void scrollUp() {
+		scroll.y += 400 * Gdx.graphics.getDeltaTime();
+		System.out.println("Scroll Y: " + scroll.y);
+	}
+
+	@Override
+	public void scrollDown() {
+		scroll.y -= 400 * Gdx.graphics.getDeltaTime();
+		System.out.println("Scroll Y: " + scroll.y);
+	}
+
+	@Override
+	public void scrollLeft() {
+		scroll.x -= 400 * Gdx.graphics.getDeltaTime();
+		System.out.println("Scroll X: " + scroll.x);
+	}
+
+	@Override
+	public void scrollRight() {
+		scroll.x += 400 * Gdx.graphics.getDeltaTime();
+		System.out.println("Scroll X: " + scroll.x);
+	}
+	
+	private int lastDragX = 0, lastDragY = 0;
+	
+	@Override
+	public void scroll(int x, int y){
+		if(lastDragX != 0 && lastDragY != 0){
+			int xDiff = lastDragX - x;
+			int yDiff = lastDragY - y;
+			scroll.x -= xDiff;
+			scroll.y += yDiff;
+		}
+		lastDragX = x;
+		lastDragY = y;
+				
+	}
+
+	@Override
+	public void touch(int x, int y) {
+		handleTouch(x, y);
 	}
 }
