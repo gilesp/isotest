@@ -1,5 +1,6 @@
 package uk.co.vurt.gdxtest;
 
+import uk.co.vurt.gdxtest.domain.RoomPosition;
 import uk.co.vurt.gdxtest.input.KeyAndMouseInputProcessor;
 
 import com.badlogic.gdx.ApplicationListener;
@@ -42,7 +43,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 //	private int startX, startY;
 //	private float centreX, centreY;
 	private Vector3 touchPosition;
-	private MapPosition puckCell;
+	private RoomPosition puckCell;
 	
 	private Vector2 scroll;
 	private float zoomLevel= 1.0f;
@@ -57,7 +58,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 		whiteTileImage = new Texture(Gdx.files.internal("tile_white.png"));
 		blackTileImage = new Texture(Gdx.files.internal("tile_black.png"));
 		puckImage = new Texture(Gdx.files.internal("puck.png"));
-		puckCell = new MapPosition(0, 0);
+		puckCell = new RoomPosition(0, 0);
 		
 		inputMultiplexer = new InputMultiplexer();
 		inputMultiplexer.addProcessor(new KeyAndMouseInputProcessor(this, this));
@@ -100,7 +101,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 		Vector2 cellPosition;
 		for(int row = 0; row < map[0].length; row++){
 			for(int col = map.length-1; col >= 0; col--){
-				cellPosition = mapToScreen(new MapPosition(row, col));
+				cellPosition = mapToScreen(new RoomPosition(row, col));
 				if(cellPosition.x > -tileWidth && cellPosition.x < SCREEN_WIDTH+tileWidth
 						&& cellPosition.y > -tileHeight && cellPosition.y < SCREEN_HEIGHT+tileHeight){
 					if(map[col][row] == 0){
@@ -121,14 +122,14 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 
 	}
 
- 	private Vector2 mapToScreen(MapPosition mapPos){
+ 	private Vector2 mapToScreen(RoomPosition mapPos){
  		return new Vector2(Math.round(((mapPos.getCol() + mapPos.getRow()) * tileWidth/2) + scroll.x),
  				Math.round(((mapPos.getRow() - mapPos.getCol()) * tileHeight/2) + scroll.y));
  	}
  	
  	//TODO: Finish the linear equation integration to make this more efficient
  	// and to fix the off-by-one issue with the column
- 	private MapPosition screenToMap(float screenX, float screenY){
+ 	private RoomPosition screenToMap(float screenX, float screenY){
  		float offsetX = screenX - scroll.x/* - startX*/;
  		float offsetY = screenY - scroll.y/* - startY*/;
  		
@@ -137,7 +138,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 
 		col = col -1;
 		
-		return new MapPosition(row, col);
+		return new RoomPosition(row, col);
  	}
  	
 	private void handleTouch(int screenX, int screenY){
@@ -146,7 +147,7 @@ public class GdxTest implements ApplicationListener, ScrollHandler, TouchHandler
 		camera.unproject(touchPosition);
 		System.out.println("Unprojected: " + touchPosition.x + "," + touchPosition.y);
 
-		MapPosition mapPos = screenToMap(touchPosition.x, touchPosition.y);
+		RoomPosition mapPos = screenToMap(touchPosition.x, touchPosition.y);
 		
 	    //check the click isn't outside the map boundaries
   		if(mapPos.getRow() >= 0 && mapPos.getCol() >= 0 && 

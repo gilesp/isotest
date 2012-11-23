@@ -1,11 +1,12 @@
-package uk.co.vurt.gdxtest;
+package uk.co.vurt.gdxtest.domain;
 
-public class MapPosition {
+public class RoomPosition {
 
-	int row = 0;
-	int col = 0;
+	//made public for convenience's sake
+	public int row = 0;
+	public int col = 0;
 	
-	public MapPosition(int x, int y){
+	public RoomPosition(int x, int y){
 		this.row = x;
 		this.col = y;
 	}
